@@ -1,4 +1,4 @@
-name: Deploy Food App to EC2
+name: CI Pipeline
 
 on:
   push:
@@ -6,29 +6,22 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2 Server
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_KEY }}
+          python-version: '3.11'
 
-          script: |
-            cd /home/ubuntu/food-ordering-app
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-            git pull origin main
-
-            source venv/bin/activate
-
-            pip install -r requirements.txt
-
-            sudo systemctl restart foodapp
-
-            sudo systemctl restart nginx
-
-            echo "Deployment completed successfully"
+      - name: Verify Flask app
+        run: |
+          test -f app.py
+          echo "CI pipeline completed successfully"
